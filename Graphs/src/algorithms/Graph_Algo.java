@@ -1,6 +1,10 @@
 package algorithms;
 
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 
 import dataStructure.DGraph;
@@ -55,6 +59,29 @@ public class Graph_Algo implements graph_algorithms {
 			this.g = null;
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		}
+	}
+	
+	@Override
+	public void save(String file_name) {
+		try (PrintWriter pw = new PrintWriter(new FileWriter(file_name))) {
+			for (node_data n : g.getV()) {
+				// format:
+				// src,dst1;w1,dst2;w2,dst3;w3,...
+				String dests = "";
+				for (edge_data e : g.getE(n.getKey())) {
+					dests += e.getDest() + ";" + e.getWeight() + ",";
+				}
+				// delete last comma
+				if (!dests.isEmpty()) {
+					dests = dests.substring(0, dests.length() - 1);
+				}
+				pw.println(n.getKey() + ":" + n.getLocation().x() + "-" + n.getLocation().y() + "," + dests);
+			}
+		} catch (IOException e1) {
+			this.g = null;
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
 		}
 	}
 }
