@@ -7,10 +7,13 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.Set;
 
@@ -37,12 +40,6 @@ public class Graph_Algo implements graph_algorithms {
 		this.g = g;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see algorithms.graph_algorithms#init(java.lang.String) Just go over the file
-	 * lines and parse
-	 */
 	@Override
 	public void init(String file_name) {
 		this.g = new DGraph();
@@ -113,6 +110,12 @@ public class Graph_Algo implements graph_algorithms {
 			return -1;
 		}
 		return path.get(path.size() - 1).getWeight();
+	}
+	
+	@Override
+	public List<node_data> shortestPath(int src, int dest) {
+		computeShortestPaths(src);
+		return shortestPathAux(src, dest);
 	}
 	
 	// ASSUMPTION: computeShortestPaths(src) run before calling this function
@@ -238,7 +241,41 @@ public class Graph_Algo implements graph_algorithms {
 			return newGraph;
 		}
 		
-		
+		// node weight = min distance from src
+		// node tag = previous vertex
+		private void computeShortestPaths(int src) {
+			// reset tags to -1
+			for (node_data n : g.getV()) {
+				n.setTag(-1);
+				n.setWeight(Double.MAX_VALUE);
+			}
+
+			Comparator<node_data> nodesComparator = Comparator.comparing(node_data::getWeight, (w1, w2) -> {
+				return w1.compareTo(w2);
+			});
+
+			node_data source = this.g.getNode(src);
+			source.setWeight(0);
+			PriorityQueue<node_data> queue = new PriorityQueue<node_data>(nodesComparator);
+			queue.add(source);
+
+			while (!queue.isEmpty()) {
+				node_data n = queue.poll();
+
+				for (edge_data e : g.getE(n.getKey())) {
+					node_data dest = g.getNode(e.getDest());
+					double weight = e.getWeight();
+					double distanceThroughN = n.getWeight() + weight;
+					if (distanceThroughN < dest.getWeight()) {
+						queue.remove(dest);
+
+						dest.setWeight(distanceThroughN); // set min distance
+						dest.setTag(n.getKey()); // set previous
+						queue.add(dest);
+					}
+				}
+			}
+		}
 	
 	// run a DFS to find all reachable vertices
 		private Set<Integer> reachableFrom(int src) {
@@ -259,5 +296,4 @@ public class Graph_Algo implements graph_algorithms {
 			
 			return visited;
 		}
-
 }
